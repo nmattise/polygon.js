@@ -1,5 +1,5 @@
 var test = require('tape');
-var Polygon = require('../polygon');
+var Polygon = require('../Polygon');
 var Vec2 = require('vec2');
 
 test('constructor - take an array of vec2s', function(t) {
@@ -36,8 +36,8 @@ test('constructor - accepts objects', function(t) {
 });
 
 test('constructor - hotwires returning incoming polygons', function(t) {
-  var p = Polygon([Vec2(1, 0)]);
-  var p2 = Polygon(p);
+  var p = new Polygon([Vec2(1, 0)]);
+  var p2 = new Polygon(p);
   t.ok(p === p2);
   t.end();
 });
@@ -113,7 +113,7 @@ test('Polygon#area - compute the area of a triangle', function(t) {
     Vec2(0,0)
   ]);
 
-  var area = p.area();
+  var area = p.area;
 
   t.equal(area, 200*200/2);
   t.end();
@@ -127,7 +127,7 @@ test('Polygon#area - compute the area of a square', function(t) {
     Vec2(0,0)
   ]);
 
-  var area = p.area();
+  var area = p.area;
 
   t.equal(area, 200*200);
   t.end();
@@ -238,7 +238,7 @@ test('Polygon#closestPointTo - identify the closest point in the polygon to the 
 });
 
 test('Polygon#dedupe - remove dupes', function(t) {
-  t.equal(Polygon([
+  t.equal(new Polygon([
     Vec2(10, 10),
     Vec2(10, 10),
     Vec2(20, 10),
@@ -248,7 +248,7 @@ test('Polygon#dedupe - remove dupes', function(t) {
 });
 
 test('Polygon#dedupe - return a new instance if specified', function(t) {
-  p = Polygon([
+  p = new Polygon([
     Vec2(10, 10),
     Vec2(10, 10),
     Vec2(20, 10),
@@ -261,14 +261,14 @@ test('Polygon#dedupe - return a new instance if specified', function(t) {
 });
 
 test('Polygon#containsPoint - return true when a vec is inside of the poly', function(t) {
-  t.ok(Polygon([
+  t.ok(new Polygon([
     Vec2(0,0),
     Vec2(10,0),
     Vec2(10,10),
     Vec2(0,10)
   ]).containsPoint(Vec2(5,5)));
 
-  t.ok(Polygon([
+  t.ok(new Polygon([
     Vec2(90, 90),
     Vec2(110, 90),
     Vec2(110, 110),
@@ -278,7 +278,7 @@ test('Polygon#containsPoint - return true when a vec is inside of the poly', fun
 });
 
 test('Polygon#containsPoint - works with polygons in negative space', function(t) {
-  t.ok(Polygon([
+  t.ok(new Polygon([
     Vec2(0,0),
     Vec2(-10,0),
     Vec2(-10,-10),
@@ -288,14 +288,14 @@ test('Polygon#containsPoint - works with polygons in negative space', function(t
 });
 
 test('Polygon#containsPoint - return false when a vec is outside of a poly', function(t) {
-  t.ok(!Polygon([
+  t.ok(! new Polygon([
     Vec2(0,0),
     Vec2(10,0),
     Vec2(10,10),
     Vec2(0,10)
   ]).containsPoint(Vec2(50,5)));
 
-  t.ok(!Polygon([
+  t.ok(! new Polygon([
     Vec2(90, 90),
     Vec2(110, 90),
     Vec2(110, 110),
@@ -306,7 +306,7 @@ test('Polygon#containsPoint - return false when a vec is outside of a poly', fun
 
 
 test('Polygon#remove - remove the passed vec2', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0,0),
   ]);
 
@@ -316,7 +316,7 @@ test('Polygon#remove - remove the passed vec2', function(t) {
 });
 
 test('Polygon#remove - return this', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0,0),
   ]);
 
@@ -344,7 +344,7 @@ test('Polygon#remove - allow numeric index', function(t) {
 
 
 test('Polygon#clean - remove subsequent identical points', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0,0),
     Vec2(0,0),
     Vec2(1, 1),
@@ -362,7 +362,7 @@ test('Polygon#clean - remove subsequent identical points', function(t) {
 });
 
 test('Polygon#clean - leave identical points that are not immediately connected', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0,0),
     Vec2(1, 1),
     Vec2(0,0),
@@ -380,7 +380,7 @@ test('Polygon#clean - leave identical points that are not immediately connected'
 });
 
 test('Polygon#clean - remove the loop if exists', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0,0),
     Vec2(1, 1),
     Vec2(3, 3),
@@ -397,7 +397,7 @@ test('Polygon#clean - remove the loop if exists', function(t) {
 });
 
 test('Polygon#clean - return a new polygon if requested', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0,0),
     Vec2(0,0),
     Vec2(1, 1),
@@ -411,7 +411,7 @@ test('Polygon#clean - return a new polygon if requested', function(t) {
 });
 
 test('clone the object and all vecs', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0,0),
     Vec2(1, 1),
     Vec2(3, 3),
@@ -431,7 +431,7 @@ test('clone the object and all vecs', function(t) {
 });
 
 test('Polygon#aabb - return a box that contains all of the points', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(300, 300),
     Vec2(320, 350),
     Vec2(300, 400),
@@ -441,7 +441,7 @@ test('Polygon#aabb - return a box that contains all of the points', function(t) 
     Vec2(400, 100)
   ], 20);
 
-  var aabb = p.aabb();
+  var aabb = p.aabb;
   t.equal(aabb.x, 300);
   t.equal(aabb.y, 100);
   t.equal(aabb.w, 150);
@@ -450,8 +450,8 @@ test('Polygon#aabb - return a box that contains all of the points', function(t) 
 });
 
 test('Polygon#aabb - not explode when there are no points', function(t) {
-  var p = Polygon();
-  var aabb = p.aabb();
+  var p = new Polygon();
+  var aabb = p.aabb;
   t.equal(aabb.x, 0);
   t.equal(aabb.y, 0);
   t.equal(aabb.w, 0);
@@ -538,7 +538,7 @@ test('Polygon#containsPolygon - return false if the outer polygon intersects the
 });
 
 test('Polygon#offset', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(10, 10),
     Vec2(10, 100),
     Vec2(100, 100),
@@ -553,7 +553,7 @@ test('Polygon#offset', function(t) {
 });
 
 test('Polygon#point -return the index specified', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(10, 10),
     Vec2(10, 100),
     Vec2(100, 100),
@@ -569,19 +569,19 @@ test('Polygon#point -return the index specified', function(t) {
 });
 
 test('Polygon#center - return a vec2 at the center', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
     Vec2(0, 10),
   ]);
 
-  t.ok(p.center().equal(Vec2(5, 5)));
+  t.ok(p.center.equal(Vec2(5, 5)));
   t.end();
 });
 
 test('Polygon#scale - scale from the center by default', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -593,7 +593,7 @@ test('Polygon#scale - scale from the center by default', function(t) {
   t.ok(Vec2(55, 0).equal(p.point(1)));
   t.ok(Vec2(55, 10).equal(p.point(2)));
   t.ok(Vec2(-45, 10).equal(p.point(3)));
-  t.ok(p.center().equal(Vec2(5, 5)));
+  t.ok(p.center.equal(Vec2(5, 5)));
 
   p.scale(Vec2(1, 10));
   t.ok(Vec2(-45, -45).equal(p.point(0)));
@@ -601,12 +601,12 @@ test('Polygon#scale - scale from the center by default', function(t) {
   t.ok(Vec2(55, 55).equal(p.point(2)));
   t.ok(Vec2(-45, 55).equal(p.point(3)));
 
-  t.ok(p.center().equal(Vec2(5, 5)));
+  t.ok(p.center.equal(Vec2(5, 5)));
   t.end();
 });
 
 test('Polygon#scale - scale from an abitrary point when specified', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -619,7 +619,7 @@ test('Polygon#scale - scale from an abitrary point when specified', function(t) 
   t.ok(Vec2(100, 10).equal(p.point(2)));
   t.ok(Vec2(0, 10).equal(p.point(3)));
 
-  t.ok(p.center().equal(Vec2(50, 5)));
+  t.ok(p.center.equal(Vec2(50, 5)));
 
   p.scale(Vec2(1, 10), Vec2(0, 0));
   t.ok(Vec2(0, 0).equal(p.point(0)));
@@ -627,18 +627,18 @@ test('Polygon#scale - scale from an abitrary point when specified', function(t) 
   t.ok(Vec2(100, 100).equal(p.point(2)));
   t.ok(Vec2(0, 100).equal(p.point(3)));
 
-  t.ok(p.center().equal(Vec2(50, 50)));
+  t.ok(p.center.equal(Vec2(50, 50)));
   t.end();
 });
 
 test('Polygon#scale - chain', function(t) {
-  var p = Polygon();
+  var p = new Polygon();
   t.equal(p, p.scale(10));
   t.end();
 });
 
 test('Polygon#scale - return a new polygon if returnNew is specified', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(10, 10)
   ]);
 
@@ -649,7 +649,7 @@ test('Polygon#scale - return a new polygon if returnNew is specified', function(
 });
 
 test('Polygon#lines - iterate and call back with pairs', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -668,13 +668,13 @@ test('Polygon#lines - iterate and call back with pairs', function(t) {
 });
 
 test('Polygon#lines - chain', function(t) {
-  var p = Polygon();
+  var p = new Polygon();
   t.equal(p, p.lines(function(t) {}));
   t.end();
 });
 
 test('Polygon#line - return an array', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -705,7 +705,7 @@ test('Polygon#line - return an array', function(t) {
 
 test('Polygon#rotate - rotate around center by default', function(t) {
 
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -722,7 +722,7 @@ test('Polygon#rotate - rotate around center by default', function(t) {
 });
 
 test('Polygon#rotate - support rotation around arbitrary points', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -739,13 +739,13 @@ test('Polygon#rotate - support rotation around arbitrary points', function(t) {
 });
 
 test('Polygon#rotate - chain', function(t) {
-  var p = Polygon();
+  var p = new Polygon();
   t.equal(p, p.rotate());
   t.end();
 });
 
 test('Polygon#rotate - return a new polgyon when returnNew is specified', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -767,13 +767,13 @@ test('Polygon#rotate - return a new polgyon when returnNew is specified', functi
 });
 
 test('Polygon#equal - compare order and value', function(t) {
-  t.ok(Polygon([Vec2(1, 1)]).equal(Polygon([Vec2(1, 1)])));
-  t.ok(!Polygon([Vec2(1, 1)]).equal(Polygon([Vec2(1, 0)])));
+  t.ok(new Polygon([Vec2(1, 1)]).equal(new Polygon([Vec2(1, 1)])));
+  t.ok(! new Polygon([Vec2(1, 1)]).equal(new Polygon([Vec2(1, 0)])));
   t.end();
 });
 
 test('Polygon#translate - move a polygon', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -782,7 +782,7 @@ test('Polygon#translate - move a polygon', function(t) {
 
   p.translate(Vec2(10, 10));
 
-  t.ok(p.equal(Polygon([
+  t.ok(p.equal(new Polygon([
     Vec2(10, 10),
     Vec2(20, 10),
     Vec2(20, 20),
@@ -792,7 +792,7 @@ test('Polygon#translate - move a polygon', function(t) {
 });
 
 test('Polygon#translate - return a new polygon if specified', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -801,14 +801,14 @@ test('Polygon#translate - return a new polygon if specified', function(t) {
 
   var p2 = p.translate(Vec2(10, 10), true);
 
-  t.ok(p2.equal(Polygon([
+  t.ok(p2.equal(new Polygon([
     Vec2(10, 10),
     Vec2(20, 10),
     Vec2(20, 20),
     Vec2(10, 20)
   ])));
 
-  t.ok(p.equal(Polygon([
+  t.ok(p.equal(new Polygon([
     Vec2(0, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -818,7 +818,7 @@ test('Polygon#translate - return a new polygon if specified', function(t) {
 });
 
 test('Polygon#selfIntersections - no intersections', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(0, 10),
     Vec2(10, 10),
@@ -831,7 +831,7 @@ test('Polygon#selfIntersections - no intersections', function(t) {
 });
 
 test('Polygon#selfIntersections - no intersections', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(10, 10),
     Vec2(0, 10),
@@ -846,7 +846,7 @@ test('Polygon#selfIntersections - no intersections', function(t) {
 });
 
 test('Polygon#selfIntersections - returns a polygon', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(-10, 0),
     Vec2(10, 0),
     Vec2(10, 10),
@@ -867,7 +867,7 @@ test('Polygon#selfIntersections - returns a polygon', function(t) {
 
 test('Polygon#containsCircle - return detect circle-like containment', function(t) {
 
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(20, 0),
     Vec2(20, 20),
@@ -888,7 +888,7 @@ test('Polygon#containsCircle - return detect circle-like containment', function(
 
 test('Polygon#containsCircle - return detect circle-like containment (function)', function(t) {
 
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(20, 0),
     Vec2(20, 20),
@@ -913,7 +913,7 @@ test('Polygon#containsCircle - return detect circle-like containment (function)'
 });
 
 test('Polygon#containsCircle - not contain a circle outside of its bounds', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(-11,11),
     Vec2(15,-4),
     Vec2(32,12),
@@ -959,21 +959,21 @@ test('Polygon#containsCircle - handle the case where a line goes through the cir
 });
 
 test('Polygon#contains - polygon containment', function(t) {
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(10, 10),
     Vec2(20, 10),
     Vec2(20, 20),
     Vec2(10, 20)
   ]);
 
-  var p2 = Polygon([
+  var p2 = new Polygon([
     Vec2(11, 11),
     Vec2(19, 11),
     Vec2(19, 19),
     Vec2(11, 19)
   ]);
 
-  var p3 = Polygon([
+  var p3 = new Polygon([
     Vec2(11, 9),
     Vec2(19, 11),
     Vec2(19, 19),
@@ -987,7 +987,7 @@ test('Polygon#contains - polygon containment', function(t) {
 
 test('Polygon#contains - bounding-box-like containment', function(t) {
 
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(20, 0),
     Vec2(20, 20),
@@ -1012,7 +1012,7 @@ test('Polygon#contains - bounding-box-like containment', function(t) {
 
 test('Polygon#contains - rect-like containment (w/h)', function(t) {
 
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(20, 0),
     Vec2(20, 20),
@@ -1037,7 +1037,7 @@ test('Polygon#contains - rect-like containment (w/h)', function(t) {
 
 test('Polygon#contains - containment (width/height)', function(t) {
 
-  var p = Polygon([
+  var p = new Polygon([
     Vec2(0, 0),
     Vec2(20, 0),
     Vec2(20, 20),
@@ -1068,18 +1068,18 @@ test('Polygon#toArray', function(t) {
     [1, 1]
   ];
 
-  var out = Polygon(points).toArray();
+  var out = new Polygon(points).toArray();
   t.deepEqual(out, points);
   t.end();
 });
 
 test('Polygon#union', function(t){
-  var result = Polygon([
+  var result = new Polygon([
     [0, 0],
     [2, 0],
     [2, 2],
     [0, 2]
-  ]).union(Polygon([
+  ]).union(new Polygon([
     [1, 1],
     [3, 1],
     [3, 3],
@@ -1101,12 +1101,12 @@ test('Polygon#union', function(t){
 })
 
 test('Polygon#cut', function(t){
-  var result = Polygon([
+  var result = new Polygon([
     [0, 0],
     [2, 0],
     [2, 2],
     [0, 2]
-  ]).cut(Polygon([
+  ]).cut(new Polygon([
     [1, 1],
     [3, 1],
     [3, 3],
@@ -1127,12 +1127,12 @@ test('Polygon#cut', function(t){
 })
 
 test('Polygon#intersect', function(t){
-  var result = Polygon([
+  var result = new Polygon([
     [0, 0],
     [2, 0],
     [2, 2],
     [0, 2]
-  ]).intersect(Polygon([
+  ]).intersect(new Polygon([
     [1, 1],
     [3, 1],
     [3, 3],
@@ -1154,7 +1154,7 @@ test('Polygon#intersect', function(t){
 
 test('issue 6 (NaN)', function(t) {
   var point = Vec2(10, 10);
-  var pol = Polygon([
+  var pol = new Polygon([
     [1,1],
     [5,1],
     [5,5],
