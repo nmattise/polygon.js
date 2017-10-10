@@ -113,7 +113,7 @@ test('Polygon#area - compute the area of a triangle', function(t) {
     Vec2(0,0)
   ]);
 
-  var area = p.area;
+  var area = p.area();
 
   t.equal(area, 200*200/2);
   t.end();
@@ -127,7 +127,7 @@ test('Polygon#area - compute the area of a square', function(t) {
     Vec2(0,0)
   ]);
 
-  var area = p.area;
+  var area = p.area();
 
   t.equal(area, 200*200);
   t.end();

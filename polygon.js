@@ -1,10 +1,11 @@
 const Vec2 = require('vec2');
 const segseg = require('segseg');
 const Line2 = require('line2');
-const LineSegment = require('./LineSegment.js');
 const polygonBoolean = require('2d-polygon-boolean');
 const selfIntersections = require('2d-polygon-self-intersections');
-const POLY_SPLIT_EPS = 1E-6;
+const Poly = require('poly-split-js').Polygon;
+const Vector = require('poly-split-js').Vector;
+const Vectors = require('poly-split-js').Vectors;
 const PI = Math.PI;
 const TAU = PI * 2;
 const toTAU = (rads) => {
@@ -26,7 +27,7 @@ const defined = (a) => {
   return typeof a !== 'undefined';
 }
 
-
+// Expand required files
 class Polygon {
   constructor(points) {
     if (points instanceof Polygon) {
@@ -261,10 +262,8 @@ class Polygon {
     var n = this.length;
     var result = new Vec2(0, 0)
     this.each((pv, c, next, i) => {
-      // console.log(c);
       result.add(c.x, c.y)
     })
-    console.log(result, n);
     result = result.divide(n);
     return result;
   }
@@ -450,12 +449,6 @@ class Polygon {
     var last = root;
     var tree = [rootVec];
     selfIntersections.each(function(p, c, n) {
-      console.log(
-        'belongTo:', belongTo(last.s, last.b, c.s, c.b),
-        'contain:', contain(last.s, last.b, c.s, c.b),
-        'interfere:', interfere(last.s, last.b, c.s, c.b)
-      );
-
       //if (!contain(1-last.s, 1-last.b, 1-c.s, 1-c.b)) {
       tree.push(c);
       last = c;
@@ -640,302 +633,19 @@ class Polygon {
   toString() {
     return this.points.join(',');
   }
-  // From https://github.com/kladess/poly-split-js
-  findDistance(point) {
-    if (!(point instanceof Vec2))
-      point = Vec2(point)
-    let nearestPoint = this.closestPointTo(point);
-    let distance = point.distance(nearestPoint)
-    return distance;
-  }
-  get clear() {
-    this.points = [];
-  }
-  empty() {
-    return this.length === 0 ? true : false;
-  }
-  split(square, cutLine) {
-    if (typeof square !== 'number') {
-      throw new Error("param square was not defined");
-    }
-    let polygonSize = this.length;
-    let polygon = this;
-    if (!polygon.winding) {
-      polygon.rewind(true);
-    }
-    var poly1 = new Polygon();
-    var poly2 = new Polygon();
-    if (this.area(true) - square <= POLY_SPLIT_EPS) {
-      poly1 = this;
-      return {
-        "value": 0,
-        "poly1": poly1,
-        "poly2": poly2,
-        "cutLine": cutLine
-      };
-    }
-    var minCutLine_exists = 0;
-    var minSqLength = Number.MAX_VALUE;
-    for (var i = 0; i < polygonSize - 1; i++) {
-      for (var j = i + 1; j < polygonSize; j++) {
-        let p1 = new Polygon();
-        let p2 = new Polygon();
-        let subPoly = Polygon.createSubPoly(polygon, i, j, p1, p2);
-        p1 = subPoly.poly1;
-        p2 = subPoly.poly2;
-        let l1 = new LineSegment(polygon.point(i), polygon.point(i + 1));
-        let l2 = new LineSegment(polygon.point(j), polygon.point((j + 1) < polygonSize ? (j + 1) : 0));
-        let cut = new LineSegment();
-        var tempCut = Polygon.cutPolygon(l1, l2, square, p1, p2, cut);
-        cut = tempCut.cut;
-      }
-    }
-  }
-  static createPolygons(l1, l2, res = new Polygons()) {
-    if (!l1 instanceof LineSegment)
-      throw new Error("param l1 was not LineSegment type");
-    if (!l2 instanceof LineSegment)
-      throw new Error("param l2 was not LineSegment type");
-    res.bisector = LineSegment.getBisector(l1, l2).result;
-    var v1 = l1.getStart(),
-      v2 = l1.getEnd(),
-      v3 = l2.getStart(),
-      v4 = l2.getEnd();
-    res.p1_exist = false;
-    res.p4_exist = false;
-    if (v1 != v4) {
-      var l1s = new LineSegment(v1, res.bisector.getLineNearestPoint(v1)),
-        p1 = new Vec2(),
-        cls_l1sl2 = l1s.crossLineSegment(l2, p1);
-
-      p1 = cls_l1sl2.result;
-      res.p1_exist = (cls_l1sl2.value && p1 != v4);
-      if (res.p1_exist) {
-        res.leftTriangle.insert(v1, res.leftTriangle.length);
-        res.leftTriangle.insert(v4, res.leftTriangle.length);
-        res.leftTriangle.insert(p1, res.leftTriangle.length);
-
-        res.trapezoid.insert(p1, res.trapezoid.length);
-      } else {
-        res.trapezoid.insert(v4, res.trapezoid.length);
-      }
-
-      var l2e = new LineSegment(v4, res.bisector.getLineNearestPoint(v4)),
-        p4 = new Vec2(),
-        cls_l2el1 = l2e.crossLineSegment(l1, p4);
-      p4 = cls_l2el1.result;
-      res.p4_exist = (cls_l2el1.value && p4 != v1);
-      if (res.p4_exist) {
-        res.leftTriangle.insert(v4, res.leftTriangle.length);
-        res.leftTriangle.insert(v1, res.leftTriangle.length);
-        res.leftTriangle.insert(p4, res.leftTriangle.length);
-        res.trapezoid.insert(p4, res.trapezoid.length);
-      } else {
-        res.trapezoid.insert(v1, res.trapezoid.length);
-      }
+  splitPolygon(desiredArea) {
+    let pp = new Poly();
+    this.toArray().forEach(pt => pp.push_back(new Vector(pt[0], pt[1])));
+    let splitReuslt = pp.split(desiredArea)
+    if (splitReuslt.value) {
+      let poly1 = new Polygon(splitReuslt.poly1.poly.arrVector);
+      let poly2 = new Polygon(splitReuslt.poly2.poly.arrVector);
+      return [poly1, poly2].sort((a, b) => a.area(true) - b.area(true));
     } else {
-      res.trapezoid.insert(v4, res.trapezoid.length);
-      res.trapezoid.insert(v1, res.trapezoid.length);
+      return null;
     }
-    res.p2_exist = false;
-    res.p3_exist = false;
-    if (v2 != v3) {
-      var l2s = new LineSegment(v3, res.bisector.getLineNearestPoint(v3)),
-        p3 = new Vec2(),
-        cls_l2sl1 = l2s.crossLineSegment(l1, p3);
-      p3 = cls_l2sl1.result;
-      res.p3_exist = (cls_l2sl1.value && p3 != v2);
-      if (res.p3_exist) {
-        res.rightTriangle.insert(v3, res.rightTriangle.length);
-        res.rightTriangle.insert(v2, res.rightTriangle.length);
-        res.rightTriangle.insert(p3, res.rightTriangle.length);
-
-        res.trapezoid.insert(p3, res.trapezoid.length);
-      } else {
-        res.trapezoid.insert(v2, res.trapezoid.length);
-      }
-
-      var l1e = new LineSegment(v2, res.bisector.getLineNearestPoint(v2)),
-        p2 = new Vec2(),
-        cls_l1el2 = l1e.crossLineSegment(l2, p2);
-      p2 = cls_l1el2.result;
-      res.p2_exist = (cls_l1el2.value && p2 != v3);
-      if (res.p2_exist) {
-        res.rightTriangle.insert(v2, res.rightTriangle.length);
-        res.rightTriangle.insert(v3, res.rightTriangle.length);
-        res.rightTriangle.insert(p2, res.rightTriangle.length);
-
-        res.trapezoid.insert(p2, res.trapezoid.length);
-      } else {
-        res.trapezoid.insert(v3, res.trapezoid.length);
-      }
-    } else {
-      res.trapezoid.insert(v2, res.trapezoid.length);
-      res.trapezoid.insert(v3, res.trapezoid.length);
-    }
-    res.leftTriangleSquare = res.leftTriangle.area(true);
-    res.trapezoidSquare = res.trapezoid.area(true);
-    res.rightTriangleSquare = res.rightTriangle.area(true);
-    res.totalSquare = res.leftTriangleSquare + res.trapezoidSquare + res.rightTriangleSquare;
-    return res;
-  }
-  static cutPolygon(l1, l2, s, poly1, poly2, cut) {
-    if (!l1 instanceof Line2)
-      throw new Error("param l1 was not Line2 type");
-    if (!l2 instanceof Line2)
-      throw new Error("param l2 was not Line2 type");
-    if (!poly1 instanceof Polygon)
-      throw new Error("param poly1 was not Polygon type");
-    if (!poly2 instanceof Polygon)
-      throw new Error("param poly2 was not Polygon type");
-    if (typeof s !== "number")
-      throw new Error("param s was not number type");
-    var sn1 = s + poly2.area();
-    var sn2 = s + poly1.area();
-    if (sn1 > 0) {
-      var res = new Polygons();
-      res = Polygon.createPolygons(l1, l2, res);
-      var findCutLineRes = Polygon.findCutLine(sn1, res, cut),
-        cut = findCutLineRes.cutLine;
-      if (findCutLineRes.value) {
-        return {
-          "value": true,
-          "cut": cut
-        };
-      }
-    } else if (sn2 > 0) {
-        var res = new Polygons();
-        res =  Polygon.createPolygons(l2, l1, res);
-        var findCutLineRes = Polygon.findCutLine(sn2, res, cut),
-            cut= findCutLineRes.cutLine;
-        if(findCutLineRes.value)
-        {
-            cut = cut.reverse();
-            return {"value":true, "cut":cut};
-        }
-    }
-  }
-  static createSubPoly(poly, line1, line2, poly1, poly2) {
-    if (!poly instanceof Polygon) {
-      throw new Error("param poly was not Polygon Type");
-    }
-    poly1 = new Polygon(),
-    poly2 = new Polygon();
-    var pc1 = line2 - line1;
-    for (var i = 1; i <= pc1; i++) {
-      poly1.insert(poly.point(i + line1), poly1.size);
-    }
-    var polySize = poly.size;
-    var pc2 = polySize - pc1;
-    for (var i = 1; i <= pc2; i++) {
-      poly2.insert(poly.point((i + line2) % polySize), poly2.size);
-    }
-    return {
-      "poly1": poly1,
-      "poly2": poly2
-    };
-  }
-  // splitNearestEdge(point) {}
-  static findCutLine(square, res, cutLine) {
-    if (square > res.totalSquare) {
-      return {
-        "value": false
-      };
-    }
-    console.log(square, res, cutLine);
-    if (!res.leftTriangle.empty() && square < res.leftTriangleSquare) {
-      var m = square / res.leftTriangleSquare;
-      var p = res.leftTriangle.point(1).add(res.leftTriangle.point(2).subtract(res.leftTriangle.point(1)).multiply(m));
-      if (res.p1_exist) {
-        cutLine = new LineSegment(p, res.leftTriangle.point(0));
-        return {
-          "value": true,
-          "res": res,
-          "cutLine": cutLine
-        };
-      } else if (res.p4_exist) {
-        cutLine = new LineSegment(res.leftTriangle.point(0), p);
-        return {
-          "value": true,
-          "res": res,
-          "cutLine": cutLine
-        };
-      }
-    } else if (res.leftTriangleSquare < square && square < (res.leftTriangleSquare + res.trapezoidSquare)) {
-      var t = new LineSegment(res.trapezoid.point(0), res.trapezoid.point(3));
-      var tgA = LineSegment.getTanAngle(t, res.bisector);
-      var S = square - res.leftTriangleSquare;
-      var m;
-      if (Math.abs(tgA) > POLY_SPLIT_EPS) {
-        var a = new LineSegment(res.trapezoid.point(0), res.trapezoid.point(1)).length();
-        var b = new LineSegment(res.trapezoid.point(2), res.trapezoid.point(3)).length();
-        var hh = 2.0 * res.trapezoidSquare / (a + b);
-        console.log(res.trapezoid);
-        console.log(a,b);
-        var d = a * a - 4.0 * tgA * S;
-        console.log(a, d, tgA);
-        var h = -(-a + Math.sqrt(d)) / (2.0 * tgA);
-        console.log(h, hh);
-        m = h / hh;
-        console.log(m);
-      } else {
-        m = S / res.trapezoidSquare;
-      }
-      // console.log(m, res.trapezoidSquare, S, square, tgA);
-      // console.log(res.trapezoid.point(0));
-      // console.log(res.trapezoid.point(3));
-      // console.log(res.trapezoid.point(3).subtract(res.trapezoid.point(0)));
-      var p = res.trapezoid.point(0).add(res.trapezoid.point(3).subtract(res.trapezoid.point(0)).multiply(m));
-      var pp = res.trapezoid.point(1).add(res.trapezoid.point(2).subtract(res.trapezoid.point(1)).multiply(m));
-
-      cutLine = new LineSegment(p, pp);
-      return {
-        "value": true,
-        "res": res,
-        "cutLine": cutLine
-      };
-    } else if (!res.rightTriangle.empty() && square > res.leftTriangleSquare + res.trapezoidSquare) {
-      var S = square - res.leftTriangleSquare - res.trapezoidSquare;
-      var m = S / res.rightTriangleSquare;
-      var p = res.rightTriangle.point(2).add(res.rightTriangle.point(1).subtract(res.rightTriangle.point(2)).multiply(m));
-      if (res.p3_exist) {
-        cutLine = new LineSegment(res.rightTriangle.point(0), p);
-        return {
-          "value": true,
-          "res": res,
-          "cutLine": cutLine
-        };
-      } else if (res.p2_exist) {
-        cutLine = new LineSegment(p, res.rightTriangle.point(0));
-        return {
-          "value": true,
-          "res": res,
-          "cutLine": cutLine
-        };
-      }
-    }
-    return {
-      "value": false,
-      "res": res,
-      "cutLine": cutLine
-    };
   }
 }
-const Polygons = class Polygons {
-  constructor() {
-    this.bisector = new Line2();
-    this.leftTriangle = new Polygon();
-    this.trapezoid = new Polygon();
-    this.rightTriangle = new Polygon();
-    this.p1_exist = false;
-    this.p2_exist = false;
-    this.p3_exist = false;
-    this.p4_exist = false;
-    this.leftTriangleSquare = 0;
-    this.trapezoidSquare = 0;
-    this.rightTriangleSquare = 0;
-    this.totalSquare = 0;
-  }
-}
+
 // Export
 module.exports = Polygon;
