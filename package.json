@@ -1,6 +1,6 @@
 {
   "name": "polygon",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "utility for working with polygons (arrays of vec2s)",
   "main": "polygon.js",
   "directories": {
@@ -25,7 +25,7 @@
   },
   "scripts": {
     "test": "tape test/test.js | tap-spec",
-    "build": "browserify Polygon.js -o index.js"
+    "build": "browserify Polygon.js -o build.js"
   },
   "repository": {
     "type": "git",
