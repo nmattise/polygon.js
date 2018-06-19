@@ -1,31 +1,29 @@
-const Vec2 = require('vec2');
-const segseg = require('segseg');
-const Line2 = require('line2');
-const polygonBoolean = require('2d-polygon-boolean');
-const selfIntersections = require('2d-polygon-self-intersections');
-const Poly = require('poly-split-js').Polygon;
-const Vector = require('poly-split-js').Vector;
-const Vectors = require('poly-split-js').Vectors;
+const Vec2 = require("vec2");
+const segseg = require("segseg");
+const Line2 = require("line2");
+const polygonBoolean = require("2d-polygon-boolean");
+const selfIntersections = require("2d-polygon-self-intersections");
+const { Polygon: Poly, Vector, Vectors } = require("poly-split-js");
 const PI = Math.PI;
 const TAU = PI * 2;
-const toTAU = (rads) => {
+const toTAU = rads => {
   if (rads < 0) {
     rads += TAU;
   }
   return rads;
 };
 
-const isArray = (a) => {
+const isArray = a => {
   return Object.prototype.toString.call(a) === "[object Array]";
-}
+};
 
-const isFunction = (a) => {
-  return typeof a === 'function';
-}
+const isFunction = a => {
+  return typeof a === "function";
+};
 
-const defined = (a) => {
-  return typeof a !== 'undefined';
-}
+const defined = a => {
+  return typeof a !== "undefined";
+};
 
 // Expand required files
 class Polygon {
@@ -37,35 +35,42 @@ class Polygon {
       return new Polygon(points);
     }
     if (!Array.isArray(points)) {
-      points = (points) ? [points] : [];
+      points = points ? [points] : [];
     }
     this.points = points.map(point => {
       if (Array.isArray(point)) {
         return Vec2.fromArray(point);
       } else if (!(point instanceof Vec2)) {
-        if (typeof point.x !== 'undefined' &&
-          typeof point.y !== 'undefined') {
+        if (typeof point.x !== "undefined" && typeof point.y !== "undefined") {
           return Vec2(point.x, point.y);
         }
       } else {
         return point;
       }
-    })
+    });
   }
   each(fn) {
     for (var i = 0; i < this.points.length; i++) {
-      if (fn.call(this, this.point(i - 1), this.point(i), this.point(i + 1), i) === false) {
+      if (
+        fn.call(
+          this,
+          this.point(i - 1),
+          this.point(i),
+          this.point(i + 1),
+          i
+        ) === false
+      ) {
         break;
       }
     }
     return this;
   }
   insert(vec, index) {
-    return this.points.splice(index, 0, vec)
+    return this.points.splice(index, 0, vec);
   }
 
   point(index) {
-    var el = index % (this.points.length);
+    var el = index % this.points.length;
     if (el < 0) {
       el = this.points.length + el;
     }
@@ -76,7 +81,7 @@ class Polygon {
     var seen = {};
     // TODO: make this a tree
     var points = this.points.filter(function(a) {
-      var key = a.x + ':' + a.y;
+      var key = a.x + ":" + a.y;
       if (!seen[key]) {
         seen[key] = true;
         return true;
@@ -91,7 +96,7 @@ class Polygon {
     }
   }
   remove(vec) {
-    if (typeof vec === 'number') {
+    if (typeof vec === "number") {
       this.points.splice(vec, 1);
     } else {
       this.points = this.points.filter(function(point) {
@@ -116,14 +121,14 @@ class Polygon {
     if (returnNew) {
       return new Polygon(points);
     } else {
-      this.points = points
+      this.points = points;
       return this;
     }
   }
   simplify() {
     var clean = function(v) {
       return Math.round(v * 10000) / 10000;
-    }
+    };
 
     var collinear = function(a, b, c) {
       var r = a.x * (b.y - c.y) + b.x * (c.y - a.y) + c.x * (a.y - b.y);
@@ -149,7 +154,7 @@ class Polygon {
     return this;
   }
   winding() {
-    return this.area() > 0
+    return this.area() > 0;
   }
   rewind(cw) {
     cw = !!cw;
@@ -168,7 +173,7 @@ class Polygon {
       }
       var edge1 = first.subtract(current, true);
       var edge2 = first.subtract(prev, true);
-      area += ((edge1.x * edge2.y) - (edge1.y * edge2.x));
+      area += edge1.x * edge2.y - edge1.y * edge2.x;
     });
     return abs ? Math.abs(area / 2) : area / 2;
   }
@@ -260,10 +265,10 @@ class Polygon {
   }
   get centroid() {
     var n = this.length;
-    var result = new Vec2(0, 0)
+    var result = new Vec2(0, 0);
     this.each((pv, c, next, i) => {
-      result.add(c.x, c.y)
-    })
+      result.add(c.x, c.y);
+    });
     result = result.divide(n);
     return result;
   }
@@ -293,9 +298,12 @@ class Polygon {
     var c = false;
 
     this.each(function(prev, current, next) {
-      ((prev.y <= point.y && point.y < current.y) || (current.y <= point.y && point.y < prev.y)) &&
-      (point.x < (current.x - prev.x) * (point.y - prev.y) / (current.y - prev.y) + prev.x) &&
-      (c = !c);
+      ((prev.y <= point.y && point.y < current.y) ||
+        (current.y <= point.y && point.y < prev.y)) &&
+        point.x <
+          (current.x - prev.x) * (point.y - prev.y) / (current.y - prev.y) +
+            prev.x &&
+        (c = !c);
     });
 
     return c;
@@ -325,29 +333,31 @@ class Polygon {
     return true;
   }
   offset(delta, prune) {
-
     var res = [];
-    this.rewind(false).simplify().each(function(p, c, n, i) {
-      var e1 = c.subtract(p, true).normalize();
-      var e2 = c.subtract(n, true).normalize();
+    this.rewind(false)
+      .simplify()
+      .each(function(p, c, n, i) {
+        var e1 = c.subtract(p, true).normalize();
+        var e2 = c.subtract(n, true).normalize();
 
-      var r = delta / Math.sin(Math.acos(e1.dot(e2)) / 2);
-      var d = e1.add(e2, true).normalize().multiply(r, true);
+        var r = delta / Math.sin(Math.acos(e1.dot(e2)) / 2);
+        var d = e1
+          .add(e2, true)
+          .normalize()
+          .multiply(r, true);
 
-      var angle = toTAU(e1.angleTo(e2));
-      var o = e1.perpDot(e2) < 0 ? c.add(d, true) : c.subtract(d, true);
+        var angle = toTAU(e1.angleTo(e2));
+        var o = e1.perpDot(e2) < 0 ? c.add(d, true) : c.subtract(d, true);
 
-      if (angle > TAU * .75 || angle < TAU * .25) {
+        if (angle > TAU * 0.75 || angle < TAU * 0.25) {
+          o.computeSegments = angle;
+          c.color = "white";
+          c.radius = 3;
+        }
 
-        o.computeSegments = angle;
-        c.color = "white"
-        c.radius = 3;
-      }
-
-      o.point = c;
-      res.push(o);
-    });
-
+        o.point = c;
+        res.push(o);
+      });
 
     var parline = function(a, b) {
       var normal = a.subtract(b, true);
@@ -363,17 +373,14 @@ class Polygon {
       var n = a.add(normal, true);
       var l2 = new Line2(a.x, a.y, n.x, n.y);
       return l;
-    }
+    };
 
     var offsetPolygon = new Polygon(res);
     var ret = [];
 
-
     offsetPolygon.each(function(p, c, n, i) {
-
       var isect = segseg(c, c.point, n, n.point);
       if (isect) {
-
         var pp = offsetPolygon.point(i - 2);
         var nn = offsetPolygon.point(i + 2);
 
@@ -386,7 +393,6 @@ class Polygon {
         computed.point = c.point;
 
         ret.push(computed);
-
       } else {
         ret.push(c);
       }
@@ -406,12 +412,21 @@ class Polygon {
   }
   selfIntersections() {
     var points = [];
-    selfIntersections(this.points, function(isect, i, s, e, i2, s2, e2, unique) {
+    selfIntersections(this.points, function(
+      isect,
+      i,
+      s,
+      e,
+      i2,
+      s2,
+      e2,
+      unique
+    ) {
       if (!unique) return;
       var v = Vec2.fromArray(isect);
       points.push(v);
-      v.s = i + (s.subtract(v, true).length() / s.subtract(e, true).length())
-      v.b = i2 + (s2.subtract(v, true).length() / s2.subtract(e2, true).length())
+      v.s = i + s.subtract(v, true).length() / s.subtract(e, true).length();
+      v.b = i2 + s2.subtract(v, true).length() / s2.subtract(e2, true).length();
       v.si = i;
       v.bi = i2;
       return false;
@@ -423,16 +438,16 @@ class Polygon {
     var selfIntersections = this.selfIntersections();
 
     let belongTo = (s1, b1, s2, b2) => {
-      return s1 > s2 && b1 < b2
-    }
+      return s1 > s2 && b1 < b2;
+    };
 
     let contain = (s1, b1, s2, b2) => {
       return s1 < s2 && b1 > b2;
-    }
+    };
 
     let interfere = (s1, b1, s2, b2) => {
       return (s1 < s2 && s2 < b1 && b2 > b1) || (s2 < b1 && b1 < b2 && s1 < s2);
-    }
+    };
 
     function Node(value, depth) {
       this.value = value;
@@ -444,7 +459,7 @@ class Polygon {
     // TODO: ensure the root node is valid
     var rootVec = this.point(0).clone();
     rootVec.s = 0;
-    rootVec.b = (this.points.length - 1) + 0.99;
+    rootVec.b = this.points.length - 1 + 0.99;
     var root = new Node(rootVec);
     var last = root;
     var tree = [rootVec];
@@ -452,7 +467,7 @@ class Polygon {
       //if (!contain(1-last.s, 1-last.b, 1-c.s, 1-c.b)) {
       tree.push(c);
       last = c;
-    //}
+      //}
     });
 
     var ret = [];
@@ -466,10 +481,9 @@ class Polygon {
 
     for (var i = 0; i < tree.length; i += 2) {
       var poly = [];
-      var next = (i < tree.length - 1) ? tree[i + 1] : null;
+      var next = i < tree.length - 1 ? tree[i + 1] : null;
 
       if (next) {
-
         // collect up to the next isect
         for (var j = Math.floor(tree[i].s); j <= Math.floor(next.s); j++) {
           poly.push(this.point(j));
@@ -482,8 +496,12 @@ class Polygon {
           poly.push(this.point(j));
         }
       } else {
-        poly.push(tree[i])
-        for (var k = Math.floor(tree[i].s + 1); k <= Math.floor(tree[i].b); k++) {
+        poly.push(tree[i]);
+        for (
+          var k = Math.floor(tree[i].s + 1);
+          k <= Math.floor(tree[i].b);
+          k++
+        ) {
           poly.push(this.point(k));
         }
       }
@@ -501,13 +519,16 @@ class Polygon {
 
   rotate(rads, origin, returnNew) {
     origin = origin || this.center;
-    var obj = (returnNew) ? this.clone() : this;
+    var obj = returnNew ? this.clone() : this;
     return obj.each(function(p, c) {
-      c.subtract(origin).rotate(rads).add(origin);
+      c
+        .subtract(origin)
+        .rotate(rads)
+        .add(origin);
     });
   }
   translate(vec2, returnNew) {
-    var obj = (returnNew) ? this.clone() : this;
+    var obj = returnNew ? this.clone() : this;
     obj.each(function(p, c) {
       c.add(vec2);
     });
@@ -547,11 +568,8 @@ class Polygon {
       }
 
       return this.containsCircle(thing.position.x, thing.position.y, radius);
-
-    } else if (typeof thing.points !== 'undefined') {
-
-      var points,
-        l;
+    } else if (typeof thing.points !== "undefined") {
+      var points, l;
       if (isFunction(thing.containsPolygon)) {
         points = thing.points;
       } else if (isArray(thing.points)) {
@@ -559,7 +577,6 @@ class Polygon {
       }
 
       return this.containsPolygon(points);
-
     } else if (
       defined(thing.x1) &&
       defined(thing.x2) &&
@@ -572,11 +589,8 @@ class Polygon {
         new Vec2(thing.x2, thing.y2),
         new Vec2(thing.x1, thing.y2)
       ]);
-
     } else if (defined(thing.x) && defined(thing.y)) {
-
-      var x2,
-        y2;
+      var x2, y2;
 
       if (defined(thing.w) && defined(thing.h)) {
         x2 = thing.x + thing.w;
@@ -599,28 +613,20 @@ class Polygon {
   }
   union(other) {
     return new Polygon(
-      polygonBoolean(
-        this.toArray(),
-        other.toArray(),
-        'or'
-      )[0]
+      polygonBoolean(this.toArray(), other.toArray(), "or")[0]
     );
   }
 
   cut(other) {
-    return polygonBoolean(
-      this.toArray(),
-      other.toArray(),
-      'not'
-    ).map(r => new Polygon(r));
+    return polygonBoolean(this.toArray(), other.toArray(), "not").map(
+      r => new Polygon(r)
+    );
   }
 
   intersect(other) {
-    return polygonBoolean(
-      this.toArray(),
-      other.toArray(),
-      'and'
-    ).map(r => new Polygon(r));
+    return polygonBoolean(this.toArray(), other.toArray(), "and").map(
+      r => new Polygon(r)
+    );
   }
   toArray() {
     var l = this.length;
@@ -631,18 +637,18 @@ class Polygon {
     return ret;
   }
   toString() {
-    return this.points.join(',');
+    return this.points.join(",");
   }
   splitPolygon(desiredArea) {
     let pp = new Poly();
     this.toArray().forEach(pt => pp.push_back(new Vector(pt[0], pt[1])));
-    let splitReuslt = pp.split(desiredArea)
+    let splitReuslt = pp.split(desiredArea);
     if (splitReuslt.value) {
       let poly1 = new Polygon(splitReuslt.poly1.poly.arrVector);
       let poly2 = new Polygon(splitReuslt.poly2.poly.arrVector);
       return [poly1, poly2].sort((a, b) => a.area(true) - b.area(true));
     } else {
-      return null;
+      return new Error("Can not split polygon");
     }
   }
 }
